@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "SensorData",
+  "namespace": "com.predict.avro",
+  "fields": [
+    {"name": "deviceId", "type": "string"},
+    {"name": "timestamp", "type": "long"},
+    {"name": "temperature", "type": "double"},
+    {"name": "vibration", "type": "double"},
+    {"name": "current", "type": "double"},
+    {"name": "pressure", "type": "double"}
+  ]
+}

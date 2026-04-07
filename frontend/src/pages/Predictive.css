@@ -1,0 +1,33 @@
+.predictive {
+  animation: fadeIn 0.3s ease;
+}
+
+.predictive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 1.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.pie-card, .table-card, .history-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+}
+
+.pie-card h3, .table-card h3, .history-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #334155;
+}
+
+@media (max-width: 768px) {
+  .predictive-grid {
+    grid-template-columns: 1fr;
+  }
+}

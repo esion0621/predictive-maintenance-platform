@@ -1,0 +1,43 @@
+.alarm-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.alarm-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.alarm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.alarm-device {
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.alarm-score {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.alarm-time {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.alarm-empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem;
+}

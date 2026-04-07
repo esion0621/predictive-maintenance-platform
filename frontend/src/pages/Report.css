@@ -1,0 +1,37 @@
+.report {
+  animation: fadeIn 0.3s ease;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+}
+
+.card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #334155;
+}
+
+.bar-chart-card, .metrics-card, .type-card {
+  min-height: 400px;
+}
+
+@media (max-width: 1024px) {
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+}

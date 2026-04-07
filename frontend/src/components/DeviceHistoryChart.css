@@ -1,0 +1,50 @@
+.history-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.history-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.history-controls select, .history-controls button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.history-controls button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  transition: background 0.2s;
+}
+
+.history-controls button:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.history-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chart-wrapper {
+  position: relative;
+  min-height: 350px;
+}
+
+.loading, .placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 350px;
+  color: #9ca3af;
+}

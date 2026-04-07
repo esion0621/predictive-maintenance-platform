@@ -1,0 +1,13 @@
+kafka-topics.sh --create \
+  --bootstrap-server master:9092,slave1:9092,slave2:9092 \
+  --topic device-sensor \
+  --partitions 2 \
+  --replication-factor 2 \
+  --config retention.ms=604800000
+
+kafka-topics.sh --delete \
+  --bootstrap-server master:9092,slave1:9092,slave2:9092 \
+  --topic device-sensor
+
+
+mysql -u root -p060201 < ~/job/create_tables.sql
