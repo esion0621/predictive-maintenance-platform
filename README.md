@@ -8,15 +8,7 @@
 
 > 以下为项目运行效果示意图，实际界面以部署为准。
 
-| 实时监控大屏 | 预测维护分析 |
-|:---:|:---:|
-| ![实时监控](screenshots/dashboard.png) | ![预测维护](screenshots/predictive.png) |
-| **报表统计** | **设备卡片** |
-| ![报表分析](screenshots/report.png) | ![设备卡片](screenshots/device_cards.png) |
 
-*(请将截图文件放入 `screenshots/` 目录，并在上方替换图片链接)*
-
----
 
 ## 🎯 项目背景与目标
 
