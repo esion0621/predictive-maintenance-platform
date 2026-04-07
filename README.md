@@ -7,7 +7,11 @@
 ## 📸 项目截图
 
 > 以下为项目运行效果示意图，实际界面以部署为准。
+<img width="1602" height="760" alt="批注 2026-04-07 174357" src="https://github.com/user-attachments/assets/a04ecf8f-2ff2-46c5-913c-e717b6b30069" />
 
+<img width="1622" height="796" alt="批注 2026-04-07 174424" src="https://github.com/user-attachments/assets/6af4dab2-a32c-4401-b2fa-3351e1d10709" />
+
+<img width="1622" height="775" alt="批注 2026-04-07 174442" src="https://github.com/user-attachments/assets/78c3bbd0-09a7-4cd8-a9c5-2a7ce03253bf" />
 
 
 ## 🎯 项目背景与目标
