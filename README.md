@@ -22,8 +22,10 @@
 ---
 
 ## 🏗️ 系统架构
+<img width="8922" height="2762" alt="123456" src="https://github.com/user-attachments/assets/470ca4a9-126a-4bfc-a312-31be3cc07589" />
 
-![系统架构图](screenshots/architecture.png)
+
+
 
 - **数据模拟层**：Python 脚本模拟 100 台设备，每秒发送 1 条传感器数据到 Kafka。
 - **消息队列**：Kafka + ZooKeeper，主题 `device-sensor`，2 分区 2 副本。
