@@ -212,7 +212,7 @@ chmod +x clean_old_data.sh
 ## 📝 注意事项
 
 - Flink 作业中模型热更新间隔为60秒，修改 `JobConfig.MODEL_RELOAD_INTERVAL_MS` 可调整。
-- HDFS 路径需确保 `hdfs://master:9000` 与您的集群配置一致。
+- HDFS 路径需确保 `hdfs://master:9000` 与集群配置一致。
 - 前端默认代理后端 `http://master:8080`，可在 `vite.config.js` 中修改。
 - 生产环境建议开启 Kerberos 认证，并调整日志级别。
 
@@ -220,7 +220,7 @@ chmod +x clean_old_data.sh
 
 ## 🤝 贡献与许可
 
-本项目为工业预测维护的完整实现，仅供学习交流。
+本项目为模拟工业预测维护的完整实现，仅供学习交流。
 
 ---
 
@@ -230,5 +230,3 @@ chmod +x clean_old_data.sh
 如有问题，欢迎提 Issue 或邮件联系。
 
 ---
-
-> 感谢使用本平台，希望对您的大数据与 AI 工程化实践有所帮助！
