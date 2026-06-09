@@ -15,21 +15,20 @@ object ModelExportUtils {
   implicit val formats: Formats = Serialization.formats(NoTypeHints)
 
   def exportRandomForestToJson(model: RandomForestClassificationModel, df: DataFrame, version: String, outputBaseDir: String): String = {
-    val featureCols = Array("avg_temp", "max_vibration", "avg_current", "avg_pressure",
-      "temp_squared", "vib_squared", "temp_vib_interaction", "hour_of_day", "day_of_week")
+    val featureCols = Array("avg_temp", "max_vibration", "current_variance", "pressure_change_rate")
 
     val (mean, std) = calculateMeanStd(df, featureCols)
 
+    val numClasses = model.numClasses
     val treesData = model.trees.map { tree =>
-      extractNodeJson(tree.rootNode)
+      flattenClassificationTree(tree.rootNode, numClasses)
     }
 
     val modelData = Map(
       "model_type" -> "random_forest",
       "version" -> version,
       "n_features" -> featureCols.length,
-      "mean" -> mean,
-      "std" -> std,
+      "scaler" -> Map("mean" -> mean, "scale" -> std),
       "trees" -> treesData
     )
 
@@ -40,21 +39,19 @@ object ModelExportUtils {
   }
 
   def exportGbtToJson(model: GBTRegressionModel, df: DataFrame, version: String, outputBaseDir: String): String = {
-    val featureCols = Array("avg_temp", "max_vibration", "avg_current", "avg_pressure",
-      "temp_squared", "vib_squared", "temp_vib_interaction", "hour_of_day", "day_of_week")
+    val featureCols = Array("avg_temp", "max_vibration", "current_variance", "pressure_change_rate")
 
     val (mean, std) = calculateMeanStd(df, featureCols)
 
     val treesData = model.trees.map { tree =>
-      extractNodeJson(tree.rootNode)
+      flattenRegressionTree(tree.rootNode)
     }
 
     val modelData = Map(
       "model_type" -> "gbt_regression",
       "version" -> version,
       "n_features" -> featureCols.length,
-      "mean" -> mean,
-      "std" -> std,
+      "scaler" -> Map("mean" -> mean, "scale" -> std),
       "trees" -> treesData
     )
 
@@ -65,7 +62,7 @@ object ModelExportUtils {
   }
 
   private def calculateMeanStd(df: DataFrame, featureCols: Array[String]): (Array[Double], Array[Double]) = {
-    val stats = df.select(featureCols.map(c => org.apache.spark.sql.functions.stddev(c).alias(s"${c}_std")): _*)
+    val stats = df.select(featureCols.map(c => org.apache.spark.sql.functions.stddev_pop(c).alias(s"${c}_std")): _*)
       .crossJoin(df.select(featureCols.map(c => org.apache.spark.sql.functions.avg(c).alias(s"${c}_mean")): _*))
       .first()
 
@@ -74,27 +71,106 @@ object ModelExportUtils {
     (mean, std)
   }
 
-  private def extractNodeJson(node: Node): Map[String, Any] = {
-    node match {
-      case leaf: LeafNode =>
-        Map(
-          "type" -> "leaf",
-          "value" -> leaf.prediction
-        )
-      case internal: InternalNode =>
-        // 安全获取 threshold，处理不同类型 Split 的差异
-        val thresholdValue = internal.split match {
-          case s: ContinuousSplit => s.threshold
-          case _ => 0.0
-        }
-        Map(
-          "type" -> "internal",
-          "feature" -> internal.split.featureIndex,
-          "threshold" -> thresholdValue,
-          "left" -> extractNodeJson(internal.leftChild),
-          "right" -> extractNodeJson(internal.rightChild)
-        )
+  private def flattenClassificationTree(rootNode: Node, numClasses: Int): Map[String, Any] = {
+    val features      = scala.collection.mutable.ArrayBuffer[Int]()
+    val thresholds    = scala.collection.mutable.ArrayBuffer[Double]()
+    val leftChildren  = scala.collection.mutable.ArrayBuffer[Int]()
+    val rightChildren = scala.collection.mutable.ArrayBuffer[Int]()
+    val values        = scala.collection.mutable.ArrayBuffer[Array[Int]]()
+
+    def dfs(node: Node): Int = {
+      val idx = features.size
+      node match {
+        case leaf: LeafNode =>
+          features.append(-2)
+          thresholds.append(-2.0)
+          leftChildren.append(-1)
+          rightChildren.append(-1)
+          val predictedClass = leaf.prediction.toInt
+          val counts = Array.fill(numClasses)(0)
+          counts(predictedClass) = 10
+          values.append(counts)
+        case internal: InternalNode =>
+          // 占位，等子节点遍历完后再回填
+          features.append(0)
+          thresholds.append(0.0)
+          leftChildren.append(-1)
+          rightChildren.append(-1)
+          values.append(Array.fill(numClasses)(0))
+
+          val leftIdx  = dfs(internal.leftChild)
+          val rightIdx = dfs(internal.rightChild)
+
+          features(idx) = internal.split.featureIndex
+          val thresholdVal = internal.split match {
+            case s: ContinuousSplit => s.threshold
+            case _ => 0.0
+          }
+          thresholds(idx) = thresholdVal
+          leftChildren(idx) = leftIdx
+          rightChildren(idx) = rightIdx
+      }
+      idx
     }
+
+    dfs(rootNode)
+
+    Map(
+      "feature"        -> features.toArray,
+      "threshold"      -> thresholds.toArray,
+      "children_left"  -> leftChildren.toArray,
+      "children_right" -> rightChildren.toArray,
+      "value"          -> values.toArray
+    )
+  }
+
+  private def flattenRegressionTree(rootNode: Node): Map[String, Any] = {
+    val features      = scala.collection.mutable.ArrayBuffer[Int]()
+    val thresholds    = scala.collection.mutable.ArrayBuffer[Double]()
+    val leftChildren  = scala.collection.mutable.ArrayBuffer[Int]()
+    val rightChildren = scala.collection.mutable.ArrayBuffer[Int]()
+    val values        = scala.collection.mutable.ArrayBuffer[Array[Double]]()
+
+    def dfs(node: Node): Int = {
+      val idx = features.size
+      node match {
+        case leaf: LeafNode =>
+          features.append(-2)
+          thresholds.append(-2.0)
+          leftChildren.append(-1)
+          rightChildren.append(-1)
+          values.append(Array(leaf.prediction))
+        case internal: InternalNode =>
+          features.append(0)
+          thresholds.append(0.0)
+          leftChildren.append(-1)
+          rightChildren.append(-1)
+          values.append(Array(0.0))
+
+          val leftIdx  = dfs(internal.leftChild)
+          val rightIdx = dfs(internal.rightChild)
+
+          features(idx) = internal.split.featureIndex
+          val thresholdVal = internal.split match {
+            case s: ContinuousSplit => s.threshold
+            case _ => 0.0
+          }
+          thresholds(idx) = thresholdVal
+          leftChildren(idx) = leftIdx
+          rightChildren(idx) = rightIdx
+      }
+      idx
+    }
+
+    dfs(rootNode)
+
+    Map(
+      "feature"        -> features.toArray,
+      "threshold"      -> thresholds.toArray,
+      "children_left"  -> leftChildren.toArray,
+      "children_right" -> rightChildren.toArray,
+      "value"          -> values.toArray
+    )
   }
 
   private def writeToHdfs(path: String, content: String): Unit = {
@@ -106,3 +182,4 @@ object ModelExportUtils {
     logger.info(s"JSON model written to $path")
   }
 }
+

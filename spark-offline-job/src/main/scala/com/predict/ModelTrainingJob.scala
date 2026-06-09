@@ -26,8 +26,7 @@ object ModelTrainingJob {
   val MYSQL_PASSWORD = "060201"
 
   val featureCols = Array(
-    "avg_temp", "max_vibration", "avg_current", "avg_pressure",
-    "temp_squared", "vib_squared", "temp_vib_interaction", "hour_of_day", "day_of_week"
+    "avg_temp", "max_vibration", "current_variance", "pressure_change_rate"
   )
 
   def main(args: Array[String]): Unit = {
@@ -112,19 +111,13 @@ object ModelTrainingJob {
   }
 
   def engineerFeatures(df: DataFrame): DataFrame = {
-    val dailyStats = df.groupBy("deviceId")
+    df.groupBy("deviceId")
       .agg(
         avg("temperature").alias("avg_temp"),
         max("vibration").alias("max_vibration"),
-        avg("current").alias("avg_current"),
-        avg("pressure").alias("avg_pressure")
+        var_pop("current").alias("current_variance"),
+        (max("pressure") - min("pressure")).alias("pressure_change_rate")
       )
-    dailyStats
-      .withColumn("temp_squared", col("avg_temp") * col("avg_temp"))
-      .withColumn("vib_squared", col("max_vibration") * col("max_vibration"))
-      .withColumn("temp_vib_interaction", col("avg_temp") * col("max_vibration"))
-      .withColumn("hour_of_day", lit(0))
-      .withColumn("day_of_week", lit(0))
   }
 
   def buildLabels(df: DataFrame)(implicit spark: SparkSession): DataFrame = {
@@ -148,7 +141,7 @@ object ModelTrainingJob {
       .withColumn("label",
         when(col("aging_factor") > 0.7 &&
           (col("avg_temp") > 70 || col("max_vibration") > 1.5 ||
-            col("avg_current") > 2.5 || abs(col("avg_pressure") - 100) > 10), 1)
+            col("current_variance") > 0.5 || abs(col("pressure_change_rate")) > 5), 1)
           .otherwise(0))
 
     val withRul = withLabel
@@ -157,9 +150,7 @@ object ModelTrainingJob {
 
     withRul.select(
       col("deviceId"),
-      col("avg_temp"), col("max_vibration"), col("avg_current"), col("avg_pressure"),
-      col("temp_squared"), col("vib_squared"), col("temp_vib_interaction"),
-      col("hour_of_day"), col("day_of_week"),
+      col("avg_temp"), col("max_vibration"), col("current_variance"), col("pressure_change_rate"),
       col("label"), col("rul")
     )
   }
@@ -326,3 +317,4 @@ object ModelTrainingJob {
 
   case class ModelMetrics(rmse: Double, accuracy: Double, f1Score: Double)
 }
+

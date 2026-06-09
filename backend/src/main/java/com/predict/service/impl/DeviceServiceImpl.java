@@ -57,10 +57,19 @@ public class DeviceServiceImpl implements DeviceService {
         List<DeviceLatestStatusDTO> list = new ArrayList<>();
         for (int i = 0; i < allDevices.size(); i++) {
             DeviceInfo device = allDevices.get(i);
-            Map<Object, Object> entries = (Map<Object, Object>) results.get(i);
+            @SuppressWarnings("unchecked")
+            Map<byte[], byte[]> rawEntries = (Map<byte[], byte[]>) results.get(i);
+            // byte[] → String 转换
+            Map<String, String> entries = new HashMap<>();
+            if (rawEntries != null) {
+                for (Map.Entry<byte[], byte[]> e : rawEntries.entrySet()) {
+                    entries.put(new String(e.getKey()), new String(e.getValue()));
+                }
+            }
+
             DeviceLatestStatusDTO dto = new DeviceLatestStatusDTO();
             dto.setDeviceId(device.getDeviceId());
-            if (entries != null && !entries.isEmpty()) {
+            if (!entries.isEmpty()) {
                 dto.setTemperature(toDouble(entries.get("temperature")));
                 dto.setVibration(toDouble(entries.get("vibration")));
                 dto.setCurrent(toDouble(entries.get("current")));
@@ -163,10 +172,10 @@ public class DeviceServiceImpl implements DeviceService {
         int predictedRul = (int) Math.max(0, totalLifetime - daysInService);
 
         String key = RedisKeyUtils.deviceLatestKey(deviceId);
-        Object anomalyScoreObj = redisTemplate.opsForHash().get(key, "anomaly_score");
+        String anomalyScoreStr = (String) stringRedisTemplate.opsForHash().get(key, "anomaly_score");
         double anomalyScore = 0.0;
-        if (anomalyScoreObj != null) {
-            anomalyScore = Double.parseDouble(anomalyScoreObj.toString());
+        if (anomalyScoreStr != null && !anomalyScoreStr.isEmpty()) {
+            anomalyScore = Double.parseDouble(anomalyScoreStr);
             if (anomalyScore > 0.8) {
                 predictedRul = (int) (predictedRul * (1 - anomalyScore));
             }
@@ -254,3 +263,4 @@ public class DeviceServiceImpl implements DeviceService {
     
     
 }
+

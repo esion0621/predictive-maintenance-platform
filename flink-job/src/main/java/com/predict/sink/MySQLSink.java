@@ -9,11 +9,15 @@ import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MySQLSink extends RichSinkFunction<AnomalyResult> {
+    private static final String INSERT_SQL =
+            "INSERT INTO alarm_event (device_id, alarm_time, anomaly_score, feature_values) VALUES (?, ?, ?, ?)";
+
     private transient Connection connection;
     private transient PreparedStatement preparedStatement;
     private transient ObjectMapper objectMapper;
@@ -23,8 +27,20 @@ public class MySQLSink extends RichSinkFunction<AnomalyResult> {
         objectMapper = new ObjectMapper();
         Class.forName("com.mysql.cj.jdbc.Driver");
         connection = DriverManager.getConnection(JobConfig.MYSQL_URL, JobConfig.MYSQL_USER, JobConfig.MYSQL_PASSWORD);
-        String sql = "INSERT INTO alarm_event (device_id, alarm_time, anomaly_score, feature_values) VALUES (?, ?, ?, ?)";
-        preparedStatement = connection.prepareStatement(sql);
+        preparedStatement = connection.prepareStatement(INSERT_SQL);
+    }
+
+    private void ensureConnection() throws SQLException {
+        if (connection == null || !connection.isValid(5)) {
+            if (preparedStatement != null) {
+                try { preparedStatement.close(); } catch (Exception ignored) {}
+            }
+            if (connection != null) {
+                try { connection.close(); } catch (Exception ignored) {}
+            }
+            connection = DriverManager.getConnection(JobConfig.MYSQL_URL, JobConfig.MYSQL_USER, JobConfig.MYSQL_PASSWORD);
+            preparedStatement = connection.prepareStatement(INSERT_SQL);
+        }
     }
 
     @Override
@@ -32,6 +48,8 @@ public class MySQLSink extends RichSinkFunction<AnomalyResult> {
         if (!value.isAlarm()) {
             return;
         }
+        ensureConnection();
+
         Map<String, Double> featuresMap = new HashMap<>();
         featuresMap.put("avg_temperature", value.getFeatures()[0]);
         featuresMap.put("max_vibration", value.getFeatures()[1]);
@@ -48,7 +66,12 @@ public class MySQLSink extends RichSinkFunction<AnomalyResult> {
 
     @Override
     public void close() throws Exception {
-        if (preparedStatement != null) preparedStatement.close();
-        if (connection != null) connection.close();
+        if (preparedStatement != null) {
+            try { preparedStatement.close(); } catch (Exception e) { /* ignore */ }
+        }
+        if (connection != null) {
+            try { connection.close(); } catch (Exception e) { /* ignore */ }
+        }
     }
 }
+

@@ -5,11 +5,14 @@ import com.predict.config.JobConfig;
 import com.predict.pojo.AnomalyResult;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisSink extends RichSinkFunction<AnomalyResult> {
+    private static final Logger LOG = LoggerFactory.getLogger(RedisSink.class);
     private transient JedisPool jedisPool;
     private transient ObjectMapper objectMapper;
 
@@ -40,7 +43,7 @@ public class RedisSink extends RichSinkFunction<AnomalyResult> {
                 jedis.ltrim("alarm:list", 0, 99); // 保留最近100条
             }
         } catch (Exception e) {
-            // 记录日志，忽略Redis异常避免作业失败
+            LOG.error("Redis write failed for device: {}", value.getDeviceId(), e);
         }
     }
 
@@ -51,3 +54,4 @@ public class RedisSink extends RichSinkFunction<AnomalyResult> {
         }
     }
 }
+

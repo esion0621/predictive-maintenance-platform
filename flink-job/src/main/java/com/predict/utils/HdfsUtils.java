@@ -12,18 +12,20 @@ public class HdfsUtils {
 
     public static String readFileAsString(String hdfsPath) throws Exception {
         Configuration conf = new Configuration();
-        FileSystem fs = FileSystem.get(URI.create(HDFS_URI), conf);
-        Path path = new Path(hdfsPath);
-        if (!fs.exists(path)) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
+        try (FileSystem fs = FileSystem.get(URI.create(HDFS_URI), conf)) {
+            Path path = new Path(hdfsPath);
+            if (!fs.exists(path)) {
+                return null;
             }
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+            return sb.toString();
         }
-        return sb.toString();
     }
 }
+

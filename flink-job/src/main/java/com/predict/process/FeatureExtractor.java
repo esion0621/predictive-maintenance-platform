@@ -82,17 +82,14 @@ public class FeatureExtractor extends KeyedProcessFunction<String, SensorData, F
         );
         out.collect(feature);
 
-        // 清理定时器状态
-        nextTriggerTime.clear();
-
-        // 可选：清理过期数据（保留最近WINDOW_SIZE的数据，避免状态无限增长）
-        // 这里简单清理，实际可以更精确
+        // 清理过期数据：保留最近一个窗口长度内的数据，确保滑动窗口重叠正确
         windowBuffer.clear();
-        // 重新添加未过期的数据（如果有）
+        long expireThreshold = timestamp - JobConfig.WINDOW_SIZE_MS;
         for (SensorData data : buffer) {
-            if (data.getTimestamp() > timestamp) {
+            if (data.getTimestamp() > expireThreshold) {
                 windowBuffer.add(data);
             }
         }
     }
 }
+
