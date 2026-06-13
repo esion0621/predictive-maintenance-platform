@@ -1,40 +1,34 @@
 # 工业设备预测维护平台
 
-基于实时流处理与机器学习的工业物联网预测维护系统。平台模拟100台设备的传感器数据流，通过 Flink 实时检测异常并告警，利用 Spark 离线训练寿命预测模型，并提供完整的后端 API 与前端可视化界面。
+<img width="1602" height="760" alt="dashboard" src="https://github.com/user-attachments/assets/a04ecf8f-2ff2-46c5-913c-e717b6b30069" />
+
+<img width="1622" height="796" alt="predictive" src="https://github.com/user-attachments/assets/6af4dab2-a32c-4401-b2fa-3351e1d10709" />
+
+<img width="1622" height="775" alt="report" src="https://github.com/user-attachments/assets/78c3bbd0-09a7-4cd8-a9c5-2a7ce03253bf" />
 
 ---
 
-## 📸 项目截图
+基于 Lambda 架构的工业物联网预测维护系统。平台模拟 100 台设备的传感器数据流，通过 Flink CEP 规则匹配 + 随机森林模型实时检测异常，利用 Spark 离线训练模型并热更新，提供完整的后端 API 与前端可视化界面。
 
-> 以下为项目运行效果示意图，实际界面以部署为准。
-<img width="1602" height="760" alt="批注 2026-04-07 174357" src="https://github.com/user-attachments/assets/a04ecf8f-2ff2-46c5-913c-e717b6b30069" />
+## 🎯 核心特性
 
-<img width="1622" height="796" alt="批注 2026-04-07 174424" src="https://github.com/user-attachments/assets/6af4dab2-a32c-4401-b2fa-3351e1d10709" />
-
-<img width="1622" height="775" alt="批注 2026-04-07 174442" src="https://github.com/user-attachments/assets/78c3bbd0-09a7-4cd8-a9c5-2a7ce03253bf" />
-
-
-## 🎯 项目背景与目标
-
-在工业物联网场景下，设备传感器数据实时流入，需要快速识别异常并预测剩余寿命。本项目构建了一套完整的 Lambda 架构数据处理平台，涵盖数据采集、实时流处理、离线模型训练、API 服务与前端展示，实现了：
-
-- **实时异常检测**：Flink 消费 Kafka 数据，结合随机森林模型实时计算异常概率，告警写入 Redis 与 MySQL。
-- **离线模型训练**：Spark 每日读取 HDFS 历史数据，训练异常检测与剩余寿命模型，并热更新至 Flink。
-- **完整数据服务**：Spring Boot 提供 REST API，聚合 Redis 实时数据与 MySQL 统计结果。
-- **可视化监控**：React + ECharts 展示设备状态、告警列表、健康趋势与报表。
+- **CEP 前置拦截**：Flink 消费 Kafka 数据后先经 CEP 规则匹配（温度连续上升 R1、振动+电流双超 R2、压力急降 R3），命中立即告警，未命中送模型推理，降低延迟。
+- **模型实时推理**：随机森林模型热加载，窗口特征计算后实时输出异常概率。
+- **状态机数据生成**：生产者基于 DeviceState 状态机，随机游走+均值回归，按概率注入故障模式，生成有时序关联的传感器数据。
+- **离线模型训练**：Spark 每日读取 HDFS 历史数据，多条件组合标签训练异常检测与剩余寿命模型，2% 阈值自动更新。
+- **完整数据服务**：Spring Boot REST API，聚合 Redis 实时数据与 MySQL 统计结果。
+- **可视化监控**：React + ECharts 展示设备状态、CEP/模型告警、健康趋势与报表。
 
 ---
 
 ## 🏗️ 系统架构
-<img width="8922" height="2762" alt="123456" src="https://github.com/user-attachments/assets/470ca4a9-126a-4bfc-a312-31be3cc07589" />
 
+<img width="8922" height="2762" alt="architecture" src="https://github.com/user-attachments/assets/470ca4a9-126a-4bfc-a312-31be3cc07589" />
 
-
-
-- **数据模拟层**：Python 脚本模拟 100 台设备，每秒发送 1 条传感器数据到 Kafka。
+- **数据模拟层**：Python 状态机模拟 100 台设备，每秒发送 1 条传感器数据到 Kafka，支持 R1/R2/R3/综合故障注入。
 - **消息队列**：Kafka + ZooKeeper，主题 `device-sensor`，2 分区 2 副本。
-- **实时处理层**：Flink 1.15.4 on YARN，并行度 2，消费 Kafka → 窗口特征计算 → 模型推理 → 告警 → 写入 Redis/MySQL 与 HDFS Parquet。
-- **离线训练层**：Spark 3.1.3 on YARN，每日统计设备指标，每周训练随机森林与 GBDT 模型，导出 JSON 并更新 HDFS 索引。
+- **实时处理层**：Flink 1.15.4 on YARN，并行度 2，消费 Kafka → CEP 规则检测 → 窗口特征计算 → 模型推理 → 告警合并 → 写入 Redis/MySQL 与 HDFS Parquet。
+- **离线训练层**：Spark 3.1.3 on YARN，按设备+天聚合特征，多条件组合标签，训练随机森林与 GBDT 模型，导出 JSON 并更新 HDFS 索引。
 - **存储层**：HDFS（原始 Parquet + 模型文件），MySQL（设备信息、告警、统计、模型元数据），Redis（设备实时状态、告警列表）。
 - **服务层**：Spring Boot 3.x，提供统一 REST API。
 - **可视化层**：React 18 + Vite + ECharts，三页面：实时监控、预测维护、报表分析。
@@ -73,11 +67,11 @@
 ├── flink-job/                  # Flink 实时作业 (Java, Maven)
 │   ├── pom.xml
 │   └── src/main/java/com/predict/
-│       ├── FlinkJob.java       # 主入口：Kafka消费→清洗→窗口特征→模型推理→Redis/MySQL/HDFS
+│       ├── FlinkJob.java       # 主入口：Kafka消费→CEP检测→窗口特征→模型推理→Redis/MySQL/HDFS
 │       ├── config/JobConfig.java
-│       ├── pojo/               # SensorData, FeatureWindow, AnomalyResult
+│       ├── pojo/               # SensorData, FeatureWindow, AnomalyResult (含source/ruleId)
 │       ├── source/             # 自定义反序列化
-│       ├── process/            # FeatureExtractor, ModelLoader (热加载)
+│       ├── process/            # CEPRuleDetector, FeatureExtractor, ModelLoader (热加载)
 │       ├── model/              # RandomForestModel (JSON解析与推理)
 │       ├── sink/               # RedisSink, MySQLSink
 │       └── utils/              # HdfsUtils
@@ -87,7 +81,7 @@
 │   ├── submit_model_training.sh
 │   └── src/main/scala/com/predict/
 │       ├── DailyStatsJob.scala       # 每日设备统计，写入MySQL
-│       ├── ModelTrainingJob.scala    # 读取7天数据，训练随机森林+GBDT，导出JSON，更新MySQL与HDFS索引
+│       ├── ModelTrainingJob.scala    # 按天聚合+多条件标签+RUL惩罚项，训练随机森林+GBDT
 │       └── utils/                    # HdfsUtils, ModelExportUtils
 ├── frontend/                   # React 前端 (Vite)
 │   ├── package.json
@@ -98,11 +92,13 @@
 │       ├── components/         # KpiCard, DeviceCardGrid, TrendChart, AlarmList, HealthPieChart, RulTable, DeviceHistoryChart, AlarmBarChart, ModelMetricsCard, DeviceTypeChart
 │       └── utils/formatter.js
 ├── insert_devices.py           # 初始化100台设备到MySQL
-├── producer.py                 # Kafka 数据生产者 (模拟传感器)
-├── train_init_model.py         # 初始模型训练 (生成JSON并上传HDFS)
+├── producer.py                 # Kafka 数据生产者 (DeviceState状态机+故障注入)
+├── train_init_model.py         # 初始模型训练 (复用状态机，窗口标签，class_weight=balanced)
+├── register_model.py           # 注册模型到MySQL (model_version + model_metrics)
+├── deploy_model.sh             # 清理HDFS旧数据+上传模型+更新索引
 ├── create_tables.sql           # MySQL 建表语句
 ├── clean_old_data.sh           # 清理30天前告警与HDFS数据
-└── screenshots/                # 存放项目截图 (需自行创建)
+└── screenshots/                # 存放项目截图
 ```
 
 ---
@@ -130,19 +126,18 @@ python3 insert_devices.py
 
 - ZooKeeper, Kafka, HDFS, YARN, MySQL, Redis
 
-### 4. 训练初始模型并上传 HDFS
+### 4. 训练初始模型、注册并上传 HDFS
 
 ```bash
 python3 train_init_model.py
-hdfs dfs -mkdir -p /models/anomaly /models/rul
-hdfs dfs -put /home/hadoop/tmp/anomaly_model_*.json /models/anomaly/json/
-hdfs dfs -put /home/hadoop/tmp/anomaly_current_version.txt /models/
+python3 register_model.py
+./deploy_model.sh
 ```
 
 ### 5. 启动 Flink 作业
 
 ```bash
-flink run -m yarn-cluster -yjm 1024m -ytm 1024m -ys 1 -p 2 \
+flink run -m yarn-cluster -yjm 1024m -ytm 2048m -ys 1 -p 2 \
   -c com.predict.FlinkJob /home/hadoop/job/flink-job/target/flink-job-1.0-SNAPSHOT.jar
 ```
 
@@ -168,11 +163,18 @@ npm install
 npm run dev   # 访问 http://master:3000
 ```
 
-### 9. 配置离线调度（可选）
+### 9. 配置定时任务
 
 ```bash
 crontab -e
+
+# 每日凌晨2点：训练+注册+部署
+0 2 * * * cd /home/hadoop && python3 train_init_model.py && python3 register_model.py && ./deploy_model.sh >> /home/hadoop/logs/deploy_model.log 2>&1
+
+# 每日凌晨1点：每日统计
 0 1 * * * /home/hadoop/job/spark-offline-job/submit_daily_stats.sh
+
+# 每周日凌晨3点：Spark模型训练
 0 3 * * 0 /home/hadoop/job/spark-offline-job/submit_model_training.sh
 ```
 
@@ -180,7 +182,6 @@ crontab -e
 
 ```bash
 chmod +x clean_old_data.sh
-# 编辑脚本，设置 DRY_RUN=false 后执行
 ./clean_old_data.sh
 ```
 
@@ -190,28 +191,30 @@ chmod +x clean_old_data.sh
 
 | 模块 | 功能 | 状态 |
 |------|------|------|
-| **数据模拟** | 100设备×1条/秒，老化模拟 | ✅ |
-| **实时处理** | Kafka消费、清洗、窗口特征、模型热加载、推理、告警 | ✅ |
-| **存储** | HDFS Parquet分区，Redis Hash/List，MySQL 5张表 | ✅ |
-| **离线训练** | 每日聚合统计，每周训练随机森林+GBDT，JSON导出，效果对比，版本管理 | ✅ |
+| **数据模拟** | 100设备×1条/秒，DeviceState状态机，R1/R2/R3/综合故障注入 | ✅ |
+| **CEP检测** | 温度连续上升(R1)、振动+电流双超(R2)、压力急降(R3)，毫秒级告警 | ✅ |
+| **实时处理** | Kafka消费、CEP分流、窗口特征、模型热加载、推理、告警合并 | ✅ |
+| **存储** | HDFS Parquet分区，Redis Hash/List，MySQL 5张表（含source/rule_id） | ✅ |
+| **离线训练** | 按天聚合，多条件组合标签，RUL异常惩罚，2%更新阈值，版本管理 | ✅ |
 | **后端API** | 8个接口（最新状态、告警、历史、RUL、统计、模型信息） | ✅ |
-| **前端** | 实时监控（KPI卡片、设备卡片、趋势图、告警列表）、预测维护（健康分布、RUL表、历史查询）、报表（告警排行、模型指标、类型异常率） | ✅ |
-| **运维** | 清理脚本，调度脚本，日志记录 | ✅ |
+| **前端** | 实时监控、预测维护、报表分析，CEP/MODEL告警标签区分 | ✅ |
+| **运维** | 自动训练部署脚本，清理脚本，调度脚本，日志记录 | ✅ |
 
 ---
 
 ## 🧪 测试验证
 
-- **实时性**：窗口特征每10秒触发，告警延迟小于1秒。
-- **准确性**：异常检测模型准确率≥85%，RUL模型RMSE<30天。
+- **CEP 实时性**：逐条检测，命中规则毫秒级告警，标记 source=CEP。
+- **模型准确性**：异常检测模型准确率≥85%，RUL模型RMSE<30天。
 - **吞吐量**：Flink 并行度2，处理100条/秒平稳运行。
-- **容错**：启用Checkpoint，作业失败可从保存点恢复。
+- **容错**：启用 Checkpoint + RocksDB 状态后端，作业失败可从保存点恢复。
 
 ---
 
 ## 📝 注意事项
 
 - Flink 作业中模型热更新间隔为60秒，修改 `JobConfig.MODEL_RELOAD_INTERVAL_MS` 可调整。
+- CEP 规则阈值在 `JobConfig` 中配置，与生产者故障注入参数对应。
 - HDFS 路径需确保 `hdfs://master:9000` 与集群配置一致。
 - 前端默认代理后端 `http://master:8080`，可在 `vite.config.js` 中修改。
 - 生产环境建议开启 Kerberos 认证，并调整日志级别。
@@ -228,5 +231,3 @@ chmod +x clean_old_data.sh
 
 项目作者：esion
 如有问题，欢迎提 Issue 或邮件联系。
-
----
