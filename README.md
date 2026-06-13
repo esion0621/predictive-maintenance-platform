@@ -1,10 +1,14 @@
 # 工业设备预测维护平台
 
-<img width="1602" height="760" alt="dashboard" src="https://github.com/user-attachments/assets/a04ecf8f-2ff2-46c5-913c-e717b6b30069" />
+<img width="1612" height="752" alt="批注 2026-06-13 150045" src="https://github.com/user-attachments/assets/bf1c6a8f-b169-4376-bf5f-0b5f53ca52aa" />
 
-<img width="1622" height="796" alt="predictive" src="https://github.com/user-attachments/assets/6af4dab2-a32c-4401-b2fa-3351e1d10709" />
+<img width="1618" height="761" alt="批注 2026-06-13 150102" src="https://github.com/user-attachments/assets/99e3c26d-06e4-4ce9-969f-2ed31a05eba0" />
 
-<img width="1622" height="775" alt="report" src="https://github.com/user-attachments/assets/78c3bbd0-09a7-4cd8-a9c5-2a7ce03253bf" />
+<img width="1622" height="777" alt="批注 2026-06-13 150250" src="https://github.com/user-attachments/assets/c1e0116f-a1e4-4b21-8c42-9b7a37a47a8f" />
+
+<img width="1627" height="775" alt="批注 2026-06-13 150326" src="https://github.com/user-attachments/assets/43419388-ea15-42d9-b42d-b04cf4361103" />
+
+<img width="1628" height="760" alt="批注 2026-06-13 150338" src="https://github.com/user-attachments/assets/aa305eaa-9d4c-457b-afb6-46142045b4b2" />
 
 ---
 
