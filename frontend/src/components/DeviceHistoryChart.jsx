@@ -29,13 +29,17 @@ const DeviceHistoryChart = ({ devicesInfo }) => {
   }
 
   const option = chartData ? {
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['平均温度(℃)', '最大振动(mm/s)'] },
-    xAxis: { type: 'category', data: chartData.dates },
-    yAxis: [{ type: 'value', name: '温度' }, { type: 'value', name: '振动' }],
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', backgroundColor: 'rgba(10,14,39,0.9)', borderColor: 'rgba(0,212,255,0.2)', textStyle: { color: '#ccd6f6' } },
+    legend: { data: ['平均温度(℃)', '最大振动(mm/s)'], textStyle: { color: '#8892b0' } },
+    xAxis: { type: 'category', data: chartData.dates, axisLine: { lineStyle: { color: '#1a2555' } }, axisLabel: { color: '#5a6380' } },
+    yAxis: [
+      { type: 'value', name: '温度', nameTextStyle: { color: '#8892b0' }, axisLine: { lineStyle: { color: '#1a2555' } }, axisLabel: { color: '#5a6380' }, splitLine: { lineStyle: { color: 'rgba(26,37,85,0.3)' } } },
+      { type: 'value', name: '振动', nameTextStyle: { color: '#8892b0' }, axisLine: { lineStyle: { color: '#1a2555' } }, axisLabel: { color: '#5a6380' }, splitLine: { show: false } }
+    ],
     series: [
-      { name: '平均温度(℃)', type: 'line', data: chartData.temps, smooth: true, lineStyle: { color: '#3b82f6' } },
-      { name: '最大振动(mm/s)', type: 'line', data: chartData.vibs, smooth: true, lineStyle: { color: '#f59e0b' }, yAxisIndex: 1 }
+      { name: '平均温度(℃)', type: 'line', data: chartData.temps, smooth: true, lineStyle: { color: '#00d4ff' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,212,255,0.15)' }, { offset: 1, color: 'rgba(0,212,255,0)' }] } } },
+      { name: '最大振动(mm/s)', type: 'line', data: chartData.vibs, smooth: true, lineStyle: { color: '#ff6b35' }, yAxisIndex: 1, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,107,53,0.15)' }, { offset: 1, color: 'rgba(255,107,53,0)' }] } } }
     ]
   } : null
 

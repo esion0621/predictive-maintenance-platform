@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, NavLink } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Predictive from './pages/Predictive'
 import Report from './pages/Report'
@@ -14,9 +14,9 @@ function App() {
           <span>工业设备预测维护平台</span>
         </div>
         <div className="nav-links">
-          <Link to="/" className="nav-link">实时监控</Link>
-          <Link to="/predictive" className="nav-link">预测维护</Link>
-          <Link to="/report" className="nav-link">报表分析</Link>
+          <NavLink to="/" className="nav-link" end>实时监控</NavLink>
+          <NavLink to="/predictive" className="nav-link">预测维护</NavLink>
+          <NavLink to="/report" className="nav-link">报表分析</NavLink>
         </div>
       </nav>
       <main className="main-content">

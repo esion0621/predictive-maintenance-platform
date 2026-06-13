@@ -16,9 +16,13 @@ const AlarmList = ({ alarms }) => {
             } catch {
               alarmObj = { deviceId: 'unknown', anomalyScore: 0 }
             }
+            const isCEP = alarmObj.source === 'CEP'
             return (
-              <li key={idx} className="alarm-item">
+              <li key={idx} className="alarm-item" style={{ animationDelay: `${idx * 0.05}s` }}>
                 <span className="alarm-device">{alarmObj.deviceId}</span>
+                <span className={`alarm-source ${isCEP ? 'cep' : 'model'}`}>
+                  {isCEP ? `CEP-${alarmObj.ruleId || ''}` : 'MODEL'}
+                </span>
                 <span className="alarm-score">异常概率 {(alarmObj.anomalyScore * 100).toFixed(0)}%</span>
                 <span className="alarm-time">{formatTimestamp(alarmObj.timestamp)}</span>
               </li>
@@ -31,3 +35,4 @@ const AlarmList = ({ alarms }) => {
 }
 
 export default AlarmList
+

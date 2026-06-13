@@ -19,9 +19,9 @@ export const formatNumber = (num, digits = 2) => {
 
 // 异常分数颜色
 export const getAnomalyColor = (score) => {
-  if (score >= 0.8) return '#dc2626'
-  if (score >= 0.5) return '#f59e0b'
-  return '#10b981'
+  if (score >= 0.8) return '#ff2d55'
+  if (score >= 0.5) return '#ff6b35'
+  return '#00e5a0'
 }
 
 // 健康等级

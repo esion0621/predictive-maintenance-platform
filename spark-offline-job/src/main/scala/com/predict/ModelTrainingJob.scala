@@ -58,6 +58,12 @@ object ModelTrainingJob {
       labeledDF.cache()
       logger.info("Label and RUL construction completed.")
 
+      // 打印标签分布
+      labeledDF.groupBy("label").count().show()
+      val totalRows = labeledDF.count()
+      val abnormalRows = labeledDF.filter(col("label") === 1).count()
+      logger.info(s"Label distribution: total=$totalRows, abnormal=$abnormalRows (${abnormalRows.toDouble / totalRows * 100}%.1f%%)")
+
       // 训练异常检测模型
       logger.info("Training anomaly detection model (Random Forest)...")
       val (anomalyModel, anomalyMetrics) = trainAnomalyDetectionModel(labeledDF)
@@ -110,16 +116,26 @@ object ModelTrainingJob {
     spark.read.parquet(paths: _*)
   }
 
+  /**
+   * 按设备+天聚合特征，每个设备每天1条记录，7天=7条/设备
+   * 比之前全量聚合样本量提升7倍，且能捕捉日间趋势
+   */
   def engineerFeatures(df: DataFrame): DataFrame = {
-    df.groupBy("deviceId")
+    df.withColumn("day", to_date(from_unixtime(col("timestamp") / 1000)))
+      .groupBy("deviceId", "day")
       .agg(
         avg("temperature").alias("avg_temp"),
         max("vibration").alias("max_vibration"),
         var_pop("current").alias("current_variance"),
         (max("pressure") - min("pressure")).alias("pressure_change_rate")
       )
+      .drop("day")
   }
 
+  /**
+   * 多条件组合标签 + RUL异常惩罚
+   * 标签不再依赖单一老化因子，而是多指标组合判断
+   */
   def buildLabels(df: DataFrame)(implicit spark: SparkSession): DataFrame = {
     val deviceInfoDF = spark.read
       .format("jdbc")
@@ -137,16 +153,36 @@ object ModelTrainingJob {
       .withColumn("aging_factor", when(col("days_in_service") > 365, 1.0)
         .otherwise(col("days_in_service") / 365))
 
+    // 多条件组合标签：需要多个指标同时异常才标记，减少误标
     val withLabel = withAge
       .withColumn("label",
-        when(col("aging_factor") > 0.7 &&
-          (col("avg_temp") > 70 || col("max_vibration") > 1.5 ||
-            col("current_variance") > 0.5 || abs(col("pressure_change_rate")) > 5), 1)
-          .otherwise(0))
+        when(
+          // 条件1: 温度偏高 + 振动偏大（机械过热）
+          (col("avg_temp") > 75 && col("max_vibration") > 2.0) ||
+          // 条件2: 电流方差大 + 压力变化大（电气不稳定）
+          (col("current_variance") > 0.8 && abs(col("pressure_change_rate")) > 8) ||
+          // 条件3: 温度极高（无论其他指标）
+          (col("avg_temp") > 90) ||
+          // 条件4: 振动极大（无论其他指标）
+          (col("max_vibration") > 5.0) ||
+          // 条件5: 老化设备 + 多指标轻微异常（需同时满足3个）
+          (col("aging_factor") > 0.7 &&
+            col("avg_temp") > 65 && col("max_vibration") > 1.2 &&
+            col("current_variance") > 0.3)
+        , 1).otherwise(0)
+      )
+
+    // RUL = 基础RUL - 异常惩罚
+    val baseRul = when(col("days_in_service") > 365, lit(0))
+      .otherwise(lit(365) - col("days_in_service"))
+
+    val anomalyPenalty = when(col("label") === 1,
+      lit(-1) * (col("avg_temp") / 100 + col("max_vibration") / 10 +
+            col("current_variance") + abs(col("pressure_change_rate")) / 20)
+    ).otherwise(lit(0))
 
     val withRul = withLabel
-      .withColumn("rul", when(col("days_in_service") > 365, 0)
-        .otherwise(lit(365) - col("days_in_service")))
+      .withColumn("rul", greatest(baseRul + anomalyPenalty, lit(0)))
 
     withRul.select(
       col("deviceId"),
@@ -249,11 +285,15 @@ object ModelTrainingJob {
     }
   }
 
+  /**
+   * 模型更新阈值从5%调整为2%
+   * 5%门槛对准确率偏高（0.90→0.945才算改善），2%更合理
+   */
   def shouldUpdateModel(current: Double, previous: Double, isLowerBetter: Boolean): Boolean = {
     if (isLowerBetter) {
-      current < previous * 0.95
+      current < previous * 0.98
     } else {
-      current > previous * 1.05
+      current > previous * 1.02
     }
   }
 

@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS alarm_event (
     alarm_time DATETIME NOT NULL,
     anomaly_score DECIMAL(5,4) NOT NULL,
     feature_values JSON,
+    source VARCHAR(10) DEFAULT 'MODEL',
+    rule_id VARCHAR(10) DEFAULT NULL,
     is_handled TINYINT DEFAULT 0,
     INDEX idx_device_time (device_id, alarm_time)
 );

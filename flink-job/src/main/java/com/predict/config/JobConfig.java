@@ -32,4 +32,12 @@ public class JobConfig implements Serializable {
 
     // 模型热更新检查间隔（毫秒）
     public static final long MODEL_RELOAD_INTERVAL_MS = 60000;
+
+    // CEP 规则阈值
+    public static final double CEP_TEMP_RISE_THRESHOLD = 2.0;      // 温度单次上升阈值(°C)
+    public static final int CEP_TEMP_RISE_COUNT = 3;               // 连续上升次数
+    public static final double CEP_VIBRATION_THRESHOLD = 5.0;      // 振动阈值
+    public static final double CEP_CURRENT_THRESHOLD = 3.5;        // 电流阈值
+    public static final double CEP_PRESSURE_DROP_THRESHOLD = 10.0; // 压力急降阈值
 }
+

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import KpiCard from '../components/KpiCard'
-import DeviceCardGrid from '../components/DeviceCardGrid'   
+import DeviceCardGrid from '../components/DeviceCardGrid'
 import TrendChart from '../components/TrendChart'
 import AlarmList from '../components/AlarmList'
 import { getDevicesLatest, getDevicesInfo, getRecentAlarms } from '../api/client'
@@ -39,13 +39,19 @@ const Dashboard = () => {
   const abnormalDevices = devicesLatest.filter(d => d.anomalyScore > 0.8).length
   const todayAlarms = alarms.length
 
+  const statusClass = abnormalDevices > 5 ? 'danger' : abnormalDevices > 0 ? 'warning' : 'normal'
+  const statusText = abnormalDevices > 5 ? '严重告警' : abnormalDevices > 0 ? '有异常' : '系统正常'
+
   return (
     <div className="dashboard">
+      <div className="dashboard-status">
+        <span className={`status-badge ${statusClass}`}>{statusText}</span>
+      </div>
       <h1 className="page-title">实时监控</h1>
       <div className="kpi-row">
-        <KpiCard title="总设备数" value={totalDevices} icon="📊" color="#3b82f6" />
-        <KpiCard title="异常设备数" value={abnormalDevices} icon="⚠️" color="#ef4444" />
-        <KpiCard title="今日告警数" value={todayAlarms} icon="🔔" color="#f59e0b" />
+        <KpiCard title="总设备数" value={totalDevices} icon="📊" color="#00d4ff" />
+        <KpiCard title="异常设备数" value={abnormalDevices} icon="⚠️" color="#ff2d55" />
+        <KpiCard title="今日告警数" value={todayAlarms} icon="🔔" color="#ff6b35" />
       </div>
       <div className="dashboard-grid">
         <div className="card device-grid-card">

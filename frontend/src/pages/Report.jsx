@@ -13,14 +13,22 @@ const Report = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, versionRes, metricsRes] = await Promise.all([
+      const [statsRes, versionRes] = await Promise.all([
         getAlarmStats(7),
-        getCurrentModelVersion('anomaly'),
-        getLatestModelMetrics(1).catch(() => ({ data: null }))
+        getCurrentModelVersion('anomaly')
       ])
       setAlarmStats(statsRes.data || [])
       setModelVersion(versionRes.data)
-      setModelMetrics(metricsRes.data)
+
+      // 用当前活跃模型的 modelId 查指标
+      if (versionRes.data?.modelId) {
+        try {
+          const metricsRes = await getLatestModelMetrics(versionRes.data.modelId)
+          setModelMetrics(metricsRes.data)
+        } catch {
+          setModelMetrics(null)
+        }
+      }
     } catch (error) {
       console.error('获取报表数据失败', error)
     } finally {
@@ -54,3 +62,4 @@ const Report = () => {
 }
 
 export default Report
+

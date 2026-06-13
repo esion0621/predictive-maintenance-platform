@@ -1,1 +1,4 @@
-/* 无需额外样式 */
+.device-type-chart {
+  width: 100%;
+  height: 400px;
+}

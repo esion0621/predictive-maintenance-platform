@@ -27,14 +27,29 @@ public class RedisSink extends RichSinkFunction<AnomalyResult> {
     @Override
     public void invoke(AnomalyResult value, Context context) throws Exception {
         try (Jedis jedis = jedisPool.getResource()) {
-            // 更新设备最新状态
             String latestKey = "device:latest:" + value.getDeviceId();
+
+            // CEP 优先策略：如果当前 Redis 中 source=CEP 且时间差 < 10s，MODEL 结果不覆盖
+            String currentSource = jedis.hget(latestKey, "source");
+            String updateTimeStr = jedis.hget(latestKey, "update_time");
+            if ("MODEL".equals(value.getSource()) && "CEP".equals(currentSource) && updateTimeStr != null) {
+                try {
+                    long lastUpdate = Long.parseLong(updateTimeStr);
+                    if (System.currentTimeMillis() - lastUpdate < 10000) {
+                        return; // CEP 告警 10s 内，不覆盖
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+
+            // 更新设备最新状态
             jedis.hset(latestKey, "temperature", String.valueOf(value.getFeatures()[0]));
             jedis.hset(latestKey, "vibration", String.valueOf(value.getFeatures()[1]));
             jedis.hset(latestKey, "current", String.valueOf(value.getFeatures()[2]));
             jedis.hset(latestKey, "pressure", String.valueOf(value.getFeatures()[3]));
             jedis.hset(latestKey, "anomaly_score", String.valueOf(value.getAnomalyScore()));
             jedis.hset(latestKey, "update_time", String.valueOf(System.currentTimeMillis()));
+            jedis.hset(latestKey, "source", value.getSource() != null ? value.getSource() : "MODEL");
+            jedis.hset(latestKey, "rule_id", value.getRuleId() != null ? value.getRuleId() : "");
 
             // 如果告警，加入告警列表
             if (value.isAlarm()) {

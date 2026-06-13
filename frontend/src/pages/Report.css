@@ -13,17 +13,24 @@
 }
 
 .card {
-  background: white;
+  background: rgba(13, 22, 58, 0.6);
   border-radius: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.08);
   padding: 1.25rem;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  border-color: rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.05);
 }
 
 .card h3 {
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #334155;
+  color: #ccd6f6;
 }
 
 .bar-chart-card, .metrics-card, .type-card {
@@ -33,5 +40,16 @@
 @media (max-width: 1024px) {
   .report-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

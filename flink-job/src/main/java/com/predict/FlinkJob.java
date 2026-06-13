@@ -4,6 +4,7 @@ import com.predict.config.JobConfig;
 import com.predict.pojo.AnomalyResult;
 import com.predict.pojo.FeatureWindow;
 import com.predict.pojo.SensorData;
+import com.predict.process.CEPRuleDetector;
 import com.predict.process.FeatureExtractor;
 import com.predict.process.ModelLoader;
 import com.predict.sink.MySQLSink;
@@ -108,12 +109,20 @@ public class FlinkJob {
                 .build();
         sensorStream.sinkTo(parquetSink).name("HDFS Parquet Sink");
 
-        // 特征提取
+        // CEP 前置检测：逐条匹配已知异常模式，命中则毫秒级告警
+        DataStream<AnomalyResult> cepResultStream = sensorStream
+                .keyBy(SensorData::getDeviceId)
+                .process(new CEPRuleDetector()).name("CEP Rule Detector");
+
+        // 特征提取 + 模型推理（原路径不变）
         DataStream<FeatureWindow> featureStream = sensorStream
                 .keyBy(SensorData::getDeviceId)
                 .process(new FeatureExtractor());
 
-        DataStream<AnomalyResult> resultStream = featureStream.map(new ModelLoader());
+        DataStream<AnomalyResult> modelResultStream = featureStream.map(new ModelLoader());
+
+        // 合并 CEP 和模型两条结果流
+        DataStream<AnomalyResult> resultStream = cepResultStream.union(modelResultStream);
 
         resultStream.addSink(new RedisSink()).name("Redis Sink");
         resultStream.addSink(new MySQLSink()).name("MySQL Sink");
@@ -137,3 +146,4 @@ public class FlinkJob {
         }
     }
 }
+

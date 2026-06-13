@@ -15,5 +15,8 @@ public class AlarmEvent {
     private LocalDateTime alarmTime;
     private Double anomalyScore;
     private String featureValues;
+    private String source;
+    private String ruleId;
     private Integer isHandled;
 }
+

@@ -12,19 +12,19 @@
 }
 
 .rul-table th {
-  text-align: left;  /* 表头左对齐 */
+  text-align: left;
   padding: 0.75rem 0.5rem;
-  background-color: #f9fafb;
+  background-color: rgba(0, 212, 255, 0.05);
   font-weight: 600;
-  color: #4b5563;
-  border-bottom: 1px solid #e5e7eb;
+  color: #8892b0;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.08);
 }
 
 .rul-table td {
-  text-align: left;  /* 单元格左对齐 */
+  text-align: left;
   padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid #f3f4f6;
-  color: #374151;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.06);
+  color: #ccd6f6;
 }
 
 .left-align {
@@ -42,21 +42,27 @@
 }
 
 .health-badge.healthy {
-  background-color: #d1fae5;
-  color: #065f46;
+  color: #00e5a0;
+  background: rgba(0, 229, 160, 0.08);
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  box-shadow: 0 0 12px rgba(0, 229, 160, 0.1);
 }
 
 .health-badge.caution {
-  background-color: #fed7aa;
-  color: #9a3412;
+  color: #ff6b35;
+  background: rgba(255, 107, 53, 0.08);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  box-shadow: 0 0 12px rgba(255, 107, 53, 0.1);
 }
 
 .health-badge.danger {
-  background-color: #fee2e2;
-  color: #b91c1c;
+  color: #ff2d55;
+  background: rgba(255, 45, 85, 0.08);
+  border: 1px solid rgba(255, 45, 85, 0.2);
+  box-shadow: 0 0 16px rgba(255, 45, 85, 0.15);
 }
 
-/* 分页控件（复用之前样式，如不存在则添加） */
+/* 分页控件 */
 .pagination {
   display: flex;
   justify-content: center;
@@ -64,23 +70,23 @@
   gap: 0.75rem;
   margin-top: 0.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #eef2f6;
+  border-top: 1px solid rgba(0, 212, 255, 0.06);
 }
 
 .page-btn {
   padding: 0.4rem 0.8rem;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 22, 58, 0.5);
+  border: 1px solid rgba(0, 212, 255, 0.1);
   border-radius: 0.5rem;
-  color: #334155;
+  color: #ccd6f6;
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: rgba(0, 212, 255, 0.08);
+  border-color: rgba(0, 212, 255, 0.2);
 }
 
 .page-btn:disabled {
@@ -90,41 +96,27 @@
 
 .page-info {
   font-size: 0.8rem;
-  color: #475569;
+  color: #8892b0;
 }
 
 .no-rul-data {
   text-align: center;
   padding: 2rem;
-  color: #94a3b8;
-  background: white;
-  border-radius: 1rem;
+  color: #5a6380;
 }
 
-.rul-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-}
-
-.sort-control {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* 排序 */
+.sort-control label {
+  color: #8892b0;
   font-size: 0.875rem;
-  color: #4b5563;
 }
 
 .sort-select {
-  padding: 0.4rem 0.8rem;
-  border: 1px solid #e2e8f0;
+  padding: 0.4rem 0.6rem;
   border-radius: 0.5rem;
-  background-color: white;
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  background: rgba(13, 22, 58, 0.5);
+  color: #ccd6f6;
   font-size: 0.875rem;
-  cursor: pointer;
   outline: none;
-}
-
-.sort-select:focus {
-  border-color: #3b82f6;
 }

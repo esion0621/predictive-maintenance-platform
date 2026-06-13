@@ -46,8 +46,8 @@ public class DeviceServiceImpl implements DeviceService {
                 .map(d -> RedisKeyUtils.deviceLatestKey(d.getDeviceId()))
                 .collect(Collectors.toList());
 
-        // 使用 Pipeline 批量获取
-        List<Object> results = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+        // 使用 StringRedisTemplate Pipeline 批量获取（Flink 写入的是纯字符串，非 JSON）
+        List<Object> results = stringRedisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             for (String key : keys) {
                 connection.hashCommands().hGetAll(key.getBytes());
             }
@@ -58,18 +58,11 @@ public class DeviceServiceImpl implements DeviceService {
         for (int i = 0; i < allDevices.size(); i++) {
             DeviceInfo device = allDevices.get(i);
             @SuppressWarnings("unchecked")
-            Map<byte[], byte[]> rawEntries = (Map<byte[], byte[]>) results.get(i);
-            // byte[] → String 转换
-            Map<String, String> entries = new HashMap<>();
-            if (rawEntries != null) {
-                for (Map.Entry<byte[], byte[]> e : rawEntries.entrySet()) {
-                    entries.put(new String(e.getKey()), new String(e.getValue()));
-                }
-            }
+            Map<Object, Object> entries = (Map<Object, Object>) results.get(i);
 
             DeviceLatestStatusDTO dto = new DeviceLatestStatusDTO();
             dto.setDeviceId(device.getDeviceId());
-            if (!entries.isEmpty()) {
+            if (entries != null && !entries.isEmpty()) {
                 dto.setTemperature(toDouble(entries.get("temperature")));
                 dto.setVibration(toDouble(entries.get("vibration")));
                 dto.setCurrent(toDouble(entries.get("current")));

@@ -5,9 +5,9 @@ import './DeviceCardGrid.css'
 const DeviceCardGrid = ({ devices, devicesInfo }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchId, setSearchId] = useState('')
-  const pageSize = 12
+  const [flippedCards, setFlippedCards] = useState(new Set())
+  const pageSize = 4
 
-  // 合并设备信息
   const merged = devices.map(device => {
     const info = devicesInfo.find(i => i.deviceId === device.deviceId)
     return {
@@ -17,12 +17,10 @@ const DeviceCardGrid = ({ devices, devicesInfo }) => {
     }
   })
 
-  // 按设备ID筛选（不区分大小写）
   const filtered = searchId.trim() === ''
     ? merged
     : merged.filter(device => device.deviceId.toLowerCase().includes(searchId.toLowerCase()))
 
-  // 分页计算
   const totalPages = Math.ceil(filtered.length / pageSize)
   const startIndex = (currentPage - 1) * pageSize
   const endIndex = startIndex + pageSize
@@ -34,7 +32,16 @@ const DeviceCardGrid = ({ devices, devicesInfo }) => {
 
   const handleSearchChange = (e) => {
     setSearchId(e.target.value)
-    setCurrentPage(1) // 重置到第一页
+    setCurrentPage(1)
+  }
+
+  const toggleFlip = (deviceId) => {
+    setFlippedCards(prev => {
+      const next = new Set(prev)
+      if (next.has(deviceId)) next.delete(deviceId)
+      else next.add(deviceId)
+      return next
+    })
   }
 
   if (merged.length === 0) {
@@ -54,65 +61,86 @@ const DeviceCardGrid = ({ devices, devicesInfo }) => {
       </div>
 
       <div className="device-card-grid">
-        {currentDevices.map(device => (
-          <div key={device.deviceId} className="device-card">
-            <div className="device-card-header">
-              <div className="device-id-area">
-                <span className="device-icon">🖥️</span>
-                <span className="device-id">{device.deviceId}</span>
-              </div>
-              <span className="device-type-badge">{device.deviceType}</span>
-            </div>
+        {currentDevices.map(device => {
+          const isFlipped = flippedCards.has(device.deviceId)
+          const healthLevel = device.anomalyScore > 0.8 ? '危险' : device.anomalyScore > 0.5 ? '注意' : '健康'
+          const healthClass = healthLevel === '健康' ? 'healthy' : healthLevel === '注意' ? 'caution' : 'danger'
+          return (
+            <div key={device.deviceId} className="device-card-wrapper">
+              <div className={`device-card-inner ${isFlipped ? 'flipped' : ''}`} onClick={() => toggleFlip(device.deviceId)}>
+                {/* 正面 */}
+                <div className="device-card-front">
+                  <div className="device-card-header">
+                    <div className="device-id-area">
+                      <span className="device-icon">🖥️</span>
+                      <span className="device-id">{device.deviceId}</span>
+                    </div>
+                    <span className="device-type-badge">{device.deviceType}</span>
+                  </div>
 
-            <div className="sensor-grid">
-              <div className="sensor-item">
-                <div className="sensor-icon">🌡️</div>
-                <div className="sensor-info">
-                  <div className="sensor-label">温度</div>
-                  <div className="sensor-value">{formatNumber(device.temperature)} °C</div>
-                </div>
-              </div>
-              <div className="sensor-item">
-                <div className="sensor-icon">📳</div>
-                <div className="sensor-info">
-                  <div className="sensor-label">振动</div>
-                  <div className="sensor-value">{formatNumber(device.vibration)} mm/s</div>
-                </div>
-              </div>
-              <div className="sensor-item">
-                <div className="sensor-icon">⚡</div>
-                <div className="sensor-info">
-                  <div className="sensor-label">电流</div>
-                  <div className="sensor-value">{formatNumber(device.current)} A</div>
-                </div>
-              </div>
-              <div className="sensor-item">
-                <div className="sensor-icon">📈</div>
-                <div className="sensor-info">
-                  <div className="sensor-label">压力</div>
-                  <div className="sensor-value">{formatNumber(device.pressure)} Pa</div>
-                </div>
-              </div>
-            </div>
+                  <div className="sensor-grid">
+                    <div className="sensor-item">
+                      <div className="sensor-icon">🌡️</div>
+                      <div className="sensor-info">
+                        <div className="sensor-label">温度</div>
+                        <div className="sensor-value">{formatNumber(device.temperature)} °C</div>
+                      </div>
+                    </div>
+                    <div className="sensor-item">
+                      <div className="sensor-icon">📳</div>
+                      <div className="sensor-info">
+                        <div className="sensor-label">振动</div>
+                        <div className="sensor-value">{formatNumber(device.vibration)} mm/s</div>
+                      </div>
+                    </div>
+                    <div className="sensor-item">
+                      <div className="sensor-icon">⚡</div>
+                      <div className="sensor-info">
+                        <div className="sensor-label">电流</div>
+                        <div className="sensor-value">{formatNumber(device.current)} A</div>
+                      </div>
+                    </div>
+                    <div className="sensor-item">
+                      <div className="sensor-icon">📈</div>
+                      <div className="sensor-info">
+                        <div className="sensor-label">压力</div>
+                        <div className="sensor-value">{formatNumber(device.pressure)} Pa</div>
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="device-card-footer">
-              <div className="anomaly-container">
-                <div className="anomaly-label">异常概率</div>
-                <div className="anomaly-progress">
-                  <div 
-                    className="anomaly-progress-bar" 
-                    style={{ width: `${device.anomalyScore * 100}%`, backgroundColor: getAnomalyColor(device.anomalyScore) }}
-                  />
+                  <div className="device-card-footer">
+                    <div className="anomaly-container">
+                      <div className="anomaly-label">异常概率</div>
+                      <div className="anomaly-progress">
+                        <div
+                          className="anomaly-progress-bar"
+                          style={{ width: `${device.anomalyScore * 100}%`, backgroundColor: getAnomalyColor(device.anomalyScore) }}
+                        />
+                      </div>
+                      <div className="anomaly-percent">{formatNumber(device.anomalyScore * 100)}%</div>
+                    </div>
+                    <div className="location-info">
+                      <span className="location-icon">📍</span>
+                      <span className="location-text">{device.location}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="anomaly-percent">{formatNumber(device.anomalyScore * 100)}%</div>
-              </div>
-              <div className="location-info">
-                <span className="location-icon">📍</span>
-                <span className="location-text">{device.location}</span>
+
+                {/* 背面 */}
+                <div className="device-card-back">
+                  <div className="back-device-id">{device.deviceId}</div>
+                  <div className="back-score-value" style={{ color: getAnomalyColor(device.anomalyScore) }}>
+                    {formatNumber(device.anomalyScore * 100)}%
+                  </div>
+                  <div className="back-score-label">异常概率</div>
+                  <div className={`back-health-badge ${healthClass}`}>{healthLevel}</div>
+                  <div className="back-location">📍 {device.location}</div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {totalPages > 1 && (

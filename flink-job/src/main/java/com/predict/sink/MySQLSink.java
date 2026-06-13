@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class MySQLSink extends RichSinkFunction<AnomalyResult> {
     private static final String INSERT_SQL =
-            "INSERT INTO alarm_event (device_id, alarm_time, anomaly_score, feature_values) VALUES (?, ?, ?, ?)";
+            "INSERT INTO alarm_event (device_id, alarm_time, anomaly_score, feature_values, source, rule_id) VALUES (?, ?, ?, ?, ?, ?)";
 
     private transient Connection connection;
     private transient PreparedStatement preparedStatement;
@@ -61,6 +61,8 @@ public class MySQLSink extends RichSinkFunction<AnomalyResult> {
         preparedStatement.setTimestamp(2, new Timestamp(value.getTimestamp()));
         preparedStatement.setDouble(3, value.getAnomalyScore());
         preparedStatement.setString(4, featuresJson);
+        preparedStatement.setString(5, value.getSource() != null ? value.getSource() : "MODEL");
+        preparedStatement.setString(6, value.getRuleId());
         preparedStatement.executeUpdate();
     }
 

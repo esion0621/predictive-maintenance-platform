@@ -14,21 +14,29 @@
 .history-controls select, .history-controls button {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  background: white;
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  background: rgba(13, 22, 58, 0.5);
+  color: #ccd6f6;
   font-size: 0.875rem;
   cursor: pointer;
+  outline: none;
+}
+
+.history-controls select option {
+  background: #0a0e27;
+  color: #ccd6f6;
 }
 
 .history-controls button {
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  transition: background 0.2s;
+  background-color: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  transition: all 0.2s;
 }
 
 .history-controls button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background-color: rgba(0, 212, 255, 0.25);
+  border-color: rgba(0, 212, 255, 0.35);
 }
 
 .history-controls button:disabled {
@@ -46,5 +54,5 @@
   align-items: center;
   justify-content: center;
   height: 350px;
-  color: #9ca3af;
+  color: #5a6380;
 }

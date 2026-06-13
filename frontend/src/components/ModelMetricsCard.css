@@ -4,19 +4,56 @@
   gap: 1rem;
 }
 
-.metrics-item {
+.metrics-version {
   display: flex;
   justify-content: space-between;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.08);
+  font-size: 0.9rem;
 }
 
 .metrics-label {
   font-weight: 500;
-  color: #4b5563;
+  color: #8892b0;
 }
 
 .metrics-value {
   font-family: monospace;
-  color: #1f2937;
+  color: #00d4ff;
+}
+
+.metrics-gauges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.gauge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gauge-chart {
+  width: 100%;
+  height: 140px;
+}
+
+.gauge-title {
+  font-size: 0.75rem;
+  color: #8892b0;
+  margin-top: -0.5rem;
+}
+
+.metrics-time {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #5a6380;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .metrics-gauges {
+    grid-template-columns: 1fr;
+  }
 }
