@@ -27,7 +27,8 @@
 
 ## 🏗️ 系统架构
 
-<img width="8922" height="2762" alt="architecture" src="https://github.com/user-attachments/assets/470ca4a9-126a-4bfc-a312-31be3cc07589" />
+<img width="6522" height="8413" alt="deepseek_mermaid_20260614_56adbe" src="https://github.com/user-attachments/assets/f08a181a-0c7d-45ae-8b11-e0cf12c3a73b" />
+
 
 - **数据模拟层**：Python 状态机模拟 100 台设备，每秒发送 1 条传感器数据到 Kafka，支持 R1/R2/R3/综合故障注入。
 - **消息队列**：Kafka + ZooKeeper，主题 `device-sensor`，2 分区 2 副本。
